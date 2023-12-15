@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from models import storage
 from models.state import State
 from flask import Flask, render_template
@@ -80,6 +81,8 @@ def cities_by_states():
     """display a HTML page with list of all State objects and their cities"""
     states = storage.all(State).values()
     states = sorted(states, key=lambda state: state.name)
+    for state in states:
+        state.cities = sorted(state.cities, key=lambda city: city.name)
     return render_template('8-cities_by_states.html', states=states)
 
 
@@ -89,6 +92,14 @@ def states_id(id):
     states = storage.all(State).values()
     state = next(filter(lambda x: x.id == id, states), None)
     return render_template('9-states.html', state=state)
+
+
+@app.route('/states')
+def states_list():
+    """display a HTML page with list of all State objects"""
+    states = storage.all(State).values()
+    states = sorted(states, key=lambda state: state.name)
+    return render_template('9-states.html', states=states)
 
 
 if __name__ == "__main__":
