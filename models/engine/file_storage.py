@@ -18,8 +18,8 @@ class FileStorage:
             for k, v in FileStorage.__objects.items():
                 if v.__class__ == cls:
                     dir_same_cls[k] = v
-            return dir_same_cls     
-    
+            return dir_same_cls
+
     def delete(self, obj=None):
         """Deletes an object from the storage"""
         if obj is None:
@@ -31,7 +31,6 @@ class FileStorage:
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
-       ## self.all().update({obj.to_dict()['__class__'] + '.' + obj.id: obj})
         key = obj.__class__.__name__ + '.' + obj.id
         FileStorage.__objects[key] = obj
 
@@ -43,7 +42,7 @@ class FileStorage:
             for key, val in temp.items():
                 temp[key] = val.to_dict()
             json.dump(temp, f)
-            
+
     def close(self):
         """Method for closing Flask connection"""
         self.reload()
