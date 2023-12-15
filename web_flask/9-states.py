@@ -1,4 +1,18 @@
 #!/usr/bin/python3
+"""
+Starts a Flask web application listening on 0.0.0.0, port 5000
+and routes /: display “Hello HBNB!”
+    /hbnb: display “HBNB”
+    /c/<text>: display "C" + text (replaces underscores with spaces)
+    /python/(<text>): display "Python" + text (default is 'is cool')
+    /number/<int:n>: display "n is a number" only if n is an integer
+    /number_template/<int:n>: display HTML page only if n is an integer
+    /number_odd_or_even/<int:n>: display HTML page only if n is an integer
+    /state_list: display HTML page with list of all State objects
+    /cities_by_states: display HTML page with list of all City objects
+    /states/<id>: display HTML page with list of all City objects
+    /states: display HTML page with list of all State objects
+"""
 from models import storage
 from models.state import State
 from flask import Flask, render_template
@@ -8,52 +22,86 @@ app.url_map.strict_slashes = False
 
 @app.route('/')
 def hello_hbnb():
-    """display text"""
+    """Display hello message
+
+    Returns:
+        str: hello message
+    """
     return "Hello HBNB!"
 
 
 @app.route('/hbnb')
 def hbnb():
-    """display text"""
+    """Display HBNB
+
+    Returns:
+        str: HBNB
+    """
     return "HBNB"
 
 
 @app.route('/c/<text>')
 def c_text(text):
-    """display custom text given"""
+    """Display text
+
+    Args:
+        text (str): text to display
+
+    Returns:
+        str: text
+    """
     return "C {}".format(text.replace('_', ' '))
 
 
 @app.route('/python')
 @app.route('/python/<text>')
 def python_text(text="is cool"):
-    """display custom text given
-       first route statement ensures it works for:
-          curl -Ls 0.0.0.0:5000/python ; echo "" | cat -e
-          curl -Ls 0.0.0.0:5000/python/ ; echo "" | cat -e
+    """Display other text
+
+    Args:
+        text (str, optional): Other text to display. Defaults to "is cool".
+
+    Returns:
+        str: text
     """
     return "Python {}".format(text.replace('_', ' '))
 
 
 @app.route('/number/<int:n>')
 def text_if_int(n):
-    """display text only if int given"""
+    """Display number
+
+    Args:
+        n (int): number to display
+
+    Returns:
+        str: text with number
+    """
     return "{:d} is a number".format(n)
 
 
 @app.route('/number_template/<int:n>')
 def html_if_int(n):
-    """display html page only if int given
-       place given int into html template
+    """Display HTML template
+
+    Args:
+        n (int): number to check
+
+    Returns:
+        str: HTML template
     """
     return render_template('5-number.html', n=n)
 
 
 @app.route('/number_odd_or_even/<int:n>')
 def html_odd_or_even(n):
-    """display html page only if int given
-       place given int into html template
-       substitute text to display if int is odd or even
+    """Check if number is odd or even
+
+    Args:
+        n (int): number to check
+
+    Returns:
+        str: HTML template
     """
     odd_or_even = "even" if (n % 2 == 0) else "odd"
     return render_template('6-number_odd_or_even.html',
@@ -62,14 +110,22 @@ def html_odd_or_even(n):
 
 @app.teardown_appcontext
 def teardown_db(exception):
-    """after each request remove current SQLAlchemy session"""
+    """Close the db connection
+
+    Args:
+        exception (str): exception to close
+    """
     storage.close()
 
 
+@app.route('/states')
 @app.route('/states_list')
 def states_list():
-    """display html page
-       fetch sorted states to insert into html in UL tag
+    """
+    Display a HTML page with list of all State objects
+
+    Returns:
+        HTML: HTML page with list of all State objects
     """
     states = storage.all(State).values()
     states = sorted(states, key=lambda state: state.name)
@@ -78,7 +134,12 @@ def states_list():
 
 @app.route('/cities_by_states')
 def cities_by_states():
-    """display a HTML page with list of all State objects and their cities"""
+    """
+    Display a HTML page with list of all City objects linked to the State
+
+    Returns:
+        HTML: HTML page with list of all City objects
+    """
     states = storage.all(State).values()
     states = sorted(states, key=lambda state: state.name)
     for state in states:
@@ -88,18 +149,19 @@ def cities_by_states():
 
 @app.route('/states/<id>')
 def states_id(id):
-    """display a HTML page with list of all City objects linked to the State"""
-    states = storage.all(State).values()
-    state = next(filter(lambda x: x.id == id, states), None)
+    """
+    Display a HTML page with list of all City objects linked to the State
+
+    Args:
+        id (str): state id
+
+    Returns:
+        HTML: HTML page with list of all City objects
+    """
+    state = storage.get(State, id)
+    if state is not None:
+        state.cities = sorted(state.cities, key=lambda city: city.name)
     return render_template('9-states.html', state=state)
-
-
-@app.route('/states')
-def states_list():
-    """display a HTML page with list of all State objects"""
-    states = storage.all(State).values()
-    states = sorted(states, key=lambda state: state.name)
-    return render_template('9-states.html', states=states)
 
 
 if __name__ == "__main__":
