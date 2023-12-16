@@ -30,3 +30,7 @@ class State(BaseModel, Base):
                 if (self.id == city.state_id):
                     cities.append(city)
             return cities
+
+        def close(self):
+            """Close session"""
+            Session.close()
